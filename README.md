@@ -14,6 +14,10 @@ own tables, typed config, crons, HTTP routes, and no-codegen client exposure.
 | [`@onebase/email`](packages/email) | Email transports (Resend, Postmark, SMTP) + onebase auth `sendCode` helper |
 | [`@onebase/notifications`](packages/notifications) | In-app notification feed with live queries and an optional email channel |
 
+Each package's README covers setup, usage and its functions. The same pages appear under
+[Component packages](https://abdullah-bl.github.io/onebase/docs/components.html) on the OneBase docs site,
+which rebuilds from this repository daily.
+
 `ui/` is reserved for UI component packages (`@onebase/ui-<name>`).
 
 ## Development
