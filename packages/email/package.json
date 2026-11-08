@@ -1,0 +1,24 @@
+{
+  "name": "@onebase/email",
+  "version": "0.1.0",
+  "description": "Email transports (Resend, Postmark, SMTP) and a onebase auth sendCode helper",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "files": [
+    "src"
+  ],
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json",
+    "test": "bun test"
+  },
+  "peerDependencies": {
+    "nodemailer": "^7.0.0"
+  },
+  "peerDependenciesMeta": {
+    "nodemailer": {
+      "optional": true
+    }
+  }
+}

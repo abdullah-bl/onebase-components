@@ -1,0 +1,19 @@
+{
+  "name": "@onebase/push",
+  "version": "0.1.0",
+  "description": "Push notifications for OneBase apps: APNs and FCM, device registry, dead-token cleanup",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "files": [
+    "src"
+  ],
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json",
+    "test": "bun test"
+  },
+  "peerDependencies": {
+    "onebase": ">=0.2.0"
+  }
+}

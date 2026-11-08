@@ -1,0 +1,19 @@
+{
+  "name": "@onebase/teams",
+  "version": "0.1.0",
+  "description": "Teams with opt-in roles for OneBase apps",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "files": [
+    "src"
+  ],
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json",
+    "test": "bun test"
+  },
+  "peerDependencies": {
+    "onebase": ">=0.2.0"
+  }
+}

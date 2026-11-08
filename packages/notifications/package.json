@@ -1,0 +1,28 @@
+{
+  "name": "@onebase/notifications",
+  "version": "0.1.0",
+  "description": "In-app notification feed with live queries and an optional email channel",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "files": [
+    "src"
+  ],
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json",
+    "test": "bun test"
+  },
+  "dependencies": {
+    "@onebase/email": "workspace:*"
+  },
+  "peerDependencies": {
+    "onebase": ">=0.2.0",
+    "@onebase/email": "*"
+  },
+  "peerDependenciesMeta": {
+    "@onebase/email": {
+      "optional": true
+    }
+  }
+}

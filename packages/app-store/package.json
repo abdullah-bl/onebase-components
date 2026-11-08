@@ -1,0 +1,19 @@
+{
+  "name": "@onebase/app-store",
+  "version": "0.1.0",
+  "description": "Apple App Store for OneBase: JWS verification, Server Notifications V2 webhook, StoreKit 2 transaction sync, subscription state",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "files": [
+    "src"
+  ],
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json",
+    "test": "bun test"
+  },
+  "peerDependencies": {
+    "onebase": ">=0.2.0"
+  }
+}
