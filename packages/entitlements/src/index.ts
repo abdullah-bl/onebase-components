@@ -15,14 +15,14 @@
 //
 //   // in an app mutation
 //   const gate = await ctx.components.ent.increment({ subject: teamId, limit: "screens" });
-//   if (!gate.allowed) throw new ConvexError("Upgrade to add more screens.");
+//   if (!gate.allowed) throw new OneBaseError("Upgrade to add more screens.");
 //
 // Store events (`applyStoreEvent`) take the same shape `@onebase/app-store`
 // produces, but nothing imports it: the shape is structural, so any billing
 // source — App Store, Stripe, an admin console — can drive assignments.
 
 import { componentServer, defineComponent, splitMountOptions, type ComponentFn, type Mount, type MountOptions } from "onebase/components";
-import { ConvexError, defineSchema, defineTable, type DataModelFromSchema } from "onebase/server";
+import { OneBaseError, defineSchema, defineTable, type DataModelFromSchema } from "onebase/server";
 import { v } from "onebase/values";
 import { canAdd, periodExpired, remaining } from "./limits";
 
@@ -105,7 +105,7 @@ async function limitFor(ctx: any, subject: string, limit: string, by: number, ca
 const setPlan = mutation({
   args: { subject: v.string(), plan: v.string(), expiresAtMs: v.optional(v.number()) },
   handler: async (ctx, { subject, plan, expiresAtMs }) => {
-    if (!ctx.config.plans[plan]) throw new ConvexError(`Unknown plan "${plan}".`);
+    if (!ctx.config.plans[plan]) throw new OneBaseError(`Unknown plan "${plan}".`);
     const row = await findAssignment(ctx, subject);
     const patch = { subject, plan, status: "active", source: "manual", expiresAtMs, updatedAtMs: Date.now() };
     if (row) await ctx.db.patch(row._id, patch);
@@ -149,7 +149,7 @@ const check = query({
 const increment = mutation({
   args: { subject: v.string(), limit: v.string(), by: v.optional(v.number()) },
   handler: async (ctx, { subject, limit, by = 1 }) => {
-    if (by < 0) throw new ConvexError("by must be zero or positive.");
+    if (by < 0) throw new OneBaseError("by must be zero or positive.");
     const state = await limitFor(ctx, subject, limit, by, true);
     if (state.allowed && state.cap > 0) {
       const row = await findUsage(ctx, subject, limit);

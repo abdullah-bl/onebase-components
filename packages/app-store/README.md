@@ -79,6 +79,7 @@ export const subscription = query({
 |---|---|
 | `syncTransactions({ userId, signedTransactions })` | Mutation. Verifies up to 10 signed transactions, keeps the usable one that expires last, and applies it as a `SYNC` event. Throws if any fails verification or belongs to another account, or if none is usable. |
 | `getSubscription({ subject })` | Live query. `{ subject, productId, periodType, status, environment, expiresAtMs, originalTransactionId, cancelAtPeriodEnd, updatedAtMs }`, or `null`. |
+| `pruneEvents({ beforeMs, limit? })` | Mutation. Deletes up to `limit` (1–1000, default 500) processed-event ids recorded before `beforeMs` and returns `{ deleted }`. Run it on a schedule to keep `billing_events` small; a replay older than the cutoff is rejected as stale by its event time anyway. |
 | `POST /webhook` | HTTP route for Apple's notifications. A bad signature gets 400, a notification it doesn't act on gets 200 so Apple stops retrying, and a database failure gets 500 so Apple retries. |
 
 `status` is one of `trialing`, `active`, `past_due` (billing retry), `canceled` (expired) or `refunded`. `cancelAtPeriodEnd` is true once the user has turned off auto-renew; the subscription stays active until `expiresAtMs`.

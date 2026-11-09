@@ -35,14 +35,14 @@ Each plan's `limits` maps a limit name to a cap, a finite number of zero or more
 
 ```ts
 // onebase/screens.ts
-import { ConvexError, mutation } from "onebase/server";
+import { OneBaseError, mutation } from "onebase/server";
 import { v } from "onebase/values";
 
 export const add = mutation({
   args: { teamId: v.string(), name: v.string() },
   handler: async (ctx, { teamId, name }) => {
     const gate = await ctx.components.ent.increment({ subject: teamId, limit: "screens" });
-    if (!gate.allowed) throw new ConvexError("Upgrade to add more screens.");
+    if (!gate.allowed) throw new OneBaseError("Upgrade to add more screens.");
     await ctx.db.insert("screens", { teamId, name });
   },
 });

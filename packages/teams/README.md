@@ -57,7 +57,7 @@ export const mine = query({
 
 // Gate your own data on a role:
 const role = await ctx.components.teams.role({ teamId, userId: me });
-assertRole(role, ["owner", "admin"]); // throws ConvexError otherwise
+assertRole(role, ["owner", "admin"]); // throws OneBaseError otherwise
 ```
 
 `ensureTeam({ userId, name })` returns the user's team with that name and creates it when it's missing, which suits a personal team made on first sign-in.
@@ -79,11 +79,11 @@ Don't `expose` the mutations to clients: they trust the `by` and `userId` they'r
 | `members({ teamId })` | Live query. `[{ userId, role, createdAtMs }]`, oldest first. |
 | `role({ teamId, userId })` | Live query. The user's role, or `null` when they aren't a member. |
 
-`assertRole(role, allowed)` is a plain function: it throws a `ConvexError` when `role` is `null` or not in `allowed`.
+`assertRole(role, allowed)` is a plain function: it throws a `OneBaseError` when `role` is `null` or not in `allowed`.
 
 ## Notes
 
 - A team always keeps an owner: the last owner can't be demoted, removed or leave. Promote someone else first, or delete the team.
 - A role that isn't in `roles` (after you rename one, say) ranks below every known role, so old rows lose power rather than gain it.
-- Errors are `ConvexError`s with a message you can show the user, such as `Requires the admin role or higher.`
+- Errors are `OneBaseError`s with a message you can show the user, such as `Requires the admin role or higher.`
 - Tables: `teams` and `members`. They're listed under the mount name on the dashboard's Data page.
