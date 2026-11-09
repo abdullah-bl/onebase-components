@@ -18,7 +18,7 @@
 // `https://<your-app>/store/webhook`.
 
 import { componentServer, defineComponent, splitMountOptions, type ComponentFn, type Mount, type MountOptions } from "onebase/components";
-import { ConvexError, defineSchema, defineTable, type DataModelFromSchema } from "onebase/server";
+import { OneBaseError, defineSchema, defineTable, type DataModelFromSchema } from "onebase/server";
 import { v } from "onebase/values";
 import { createStoreEvents, type NotificationResult, type StoreEvent, type StoreEvents, type StoreEventsConfig, type TransactionInfo } from "./apple/events";
 import { AppleJwsError, base64Decode, verifyAppleJws } from "./apple/jws";
@@ -94,7 +94,7 @@ const applyStoreEvent = internalMutation({
   handler: async (ctx, { event }): Promise<Record<string, unknown>> => {
     const id = typeof event?.id === "string" ? event.id : null;
     const type = typeof event?.type === "string" ? event.type : null;
-    if (!id || !type) throw new ConvexError("invalid store event");
+    if (!id || !type) throw new OneBaseError("invalid store event");
 
     const seen = await ctx.db.query("billing_events").withIndex("by_id", (q: any) => q.eq("id", id)).unique();
     if (seen) return { duplicate: true, eventId: id };
@@ -176,8 +176,8 @@ const MAX_SYNC_TRANSACTIONS = 10;
 const syncTransactions = mutation({
   args: { userId: v.string(), signedTransactions: v.array(v.string()) },
   handler: async (ctx, { userId, signedTransactions }) => {
-    if (signedTransactions.length === 0) throw new ConvexError("No signed transactions.");
-    if (signedTransactions.length > MAX_SYNC_TRANSACTIONS) throw new ConvexError("Too many signed transactions.");
+    if (signedTransactions.length === 0) throw new OneBaseError("No signed transactions.");
+    if (signedTransactions.length > MAX_SYNC_TRANSACTIONS) throw new OneBaseError("Too many signed transactions.");
     const events = eventsFor(ctx.config);
     const now = Date.now();
     let best: { tx: TransactionInfo; expiresAtMs: number } | null = null;
@@ -186,16 +186,16 @@ const syncTransactions = mutation({
       try {
         tx = await events.verifyTransaction(jws);
       } catch {
-        throw new ConvexError("A transaction failed verification.");
+        throw new OneBaseError("A transaction failed verification.");
       }
       const token = typeof tx.appAccountToken === "string" ? tx.appAccountToken.toLowerCase() : "";
-      if (token !== userId.toLowerCase()) throw new ConvexError("A transaction belongs to another account.");
+      if (token !== userId.toLowerCase()) throw new OneBaseError("A transaction belongs to another account.");
       if (!events.isUsableTransaction(tx)) continue;
       const expiresAtMs = typeof tx.expiresDate === "number" ? tx.expiresDate : 0;
       if (expiresAtMs <= now) continue;
       if (!best || expiresAtMs > best.expiresAtMs) best = { tx, expiresAtMs };
     }
-    if (!best) throw new ConvexError("No usable transactions.");
+    if (!best) throw new OneBaseError("No usable transactions.");
     return ctx.runMutation(applyStoreEvent, { event: events.syncEvent(best.tx) });
   },
 });

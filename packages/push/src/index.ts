@@ -18,7 +18,7 @@
 //   await ctx.components.push.sendToUser({ subject: userId, payload: { title, body } });
 
 import { componentServer, defineComponent, splitMountOptions, type ComponentFn, type Mount, type MountOptions } from "onebase/components";
-import { ConvexError, defineSchema, defineTable, type DataModelFromSchema } from "onebase/server";
+import { OneBaseError, defineSchema, defineTable, type DataModelFromSchema } from "onebase/server";
 import { v } from "onebase/values";
 import { createApnsClient, type ApnsConfig, type ApnsEnvironment } from "./apns";
 import { createFcmClient, type FcmConfig, type FcmMessage } from "./fcm";
@@ -69,8 +69,8 @@ const register = mutation({
     locale: v.optional(v.string()),
   },
   handler: async (ctx, { token, subject, platform, environment, locale }) => {
-    if (token.length < 32 || token.length > 512) throw new ConvexError("That does not look like a device token.");
-    if (!["ios", "android", "web"].includes(platform)) throw new ConvexError(`Unknown platform "${platform}".`);
+    if (token.length < 32 || token.length > 512) throw new OneBaseError("That does not look like a device token.");
+    if (!["ios", "android", "web"].includes(platform)) throw new OneBaseError(`Unknown platform "${platform}".`);
     const row = await findDevice(ctx, token);
     const patch = { token, subject, platform, environment, locale, createdAtMs: row?.createdAtMs ?? Date.now() };
     if (row) await ctx.db.patch(row._id, patch);
@@ -138,7 +138,7 @@ const sendToUser = action({
     const config = ctx.config as PushConfig;
     const apns = config.apns ? createApnsClient(config.apns) : null;
     const fcm = config.fcm ? createFcmClient(config.fcm) : null;
-    if (!apns && !fcm) throw new ConvexError("No push provider configured.");
+    if (!apns && !fcm) throw new OneBaseError("No push provider configured.");
     const rows = await ctx.runQuery(listDevices, { subject });
     let sent = 0;
     const failures: { token: string; reason: string }[] = [];
@@ -166,7 +166,7 @@ const sendToUser = action({
 const sendToUsers = action({
   args: { subjects: v.array(v.string()), payload: v.any() },
   handler: async (ctx, { subjects, payload }) => {
-    if (subjects.length > MAX_SUBJECTS) throw new ConvexError(`At most ${MAX_SUBJECTS} subjects per call.`);
+    if (subjects.length > MAX_SUBJECTS) throw new OneBaseError(`At most ${MAX_SUBJECTS} subjects per call.`);
     let sent = 0;
     const failures: { token: string; reason: string }[] = [];
     for (const subject of new Set(subjects)) {

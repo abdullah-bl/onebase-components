@@ -8,13 +8,13 @@
 //   // app function, inside a transaction
 //   const teamId = await ctx.components.teams.ensureTeam({ userId, name: "Personal" });
 //   const role = await ctx.components.teams.role({ teamId, userId });
-//   assertRole(role, ["admin"]); // throws ConvexError when the caller can't act
+//   assertRole(role, ["admin"]); // throws OneBaseError when the caller can't act
 //
 // Queries (`myTeams`, `members`, `role`) are live: clients see membership change
 // as it happens when the app exposes them.
 
 import { componentServer, defineComponent, splitMountOptions, type ComponentFn, type Mount, type MountOptions } from "onebase/components";
-import { ConvexError, defineSchema, defineTable, type DataModelFromSchema } from "onebase/server";
+import { OneBaseError, defineSchema, defineTable, type DataModelFromSchema } from "onebase/server";
 import { v } from "onebase/values";
 
 export type TeamsConfig = {
@@ -67,13 +67,13 @@ async function countOwners(ctx: any, config: TeamsConfig, teamId: string) {
 /** The acting member's role, or throws when they aren't a member at all. */
 async function actingRole(ctx: any, config: TeamsConfig, teamId: string, by: string) {
   const member = await findMember(ctx, teamId, by);
-  if (!member) throw new ConvexError("You are not a member of this team.");
+  if (!member) throw new OneBaseError("You are not a member of this team.");
   return member.role as string;
 }
 
 function requireManage(config: TeamsConfig, role: string) {
   if (rankOf(config, role) > rankOf(config, manageRoleOf(config))) {
-    throw new ConvexError(`Requires the ${manageRoleOf(config)} role or higher.`);
+    throw new OneBaseError(`Requires the ${manageRoleOf(config)} role or higher.`);
   }
 }
 
@@ -82,7 +82,7 @@ function requireOver(config: TeamsConfig, actingRole: string, targetRole: string
   const isTop = rankOf(config, actingRole) === 0;
   if (isTop) return;
   if (targetRole !== undefined && rankOf(config, targetRole) <= rankOf(config, actingRole)) {
-    throw new ConvexError(`Only the ${rolesOf(config)[0]} can act on a ${targetRole}.`);
+    throw new OneBaseError(`Only the ${rolesOf(config)[0]} can act on a ${targetRole}.`);
   }
 }
 
@@ -110,15 +110,15 @@ const ensureTeam = mutation({
 const addMember = mutation({
   args: { teamId: v.string(), userId: v.string(), role: v.optional(v.string()), by: v.string() },
   handler: async (ctx, { teamId, userId, role, by }) => {
-    if (!((await ctx.db.get(teamId as any)) as any)) throw new ConvexError("No such team.");
+    if (!((await ctx.db.get(teamId as any)) as any)) throw new OneBaseError("No such team.");
     const acting = await actingRole(ctx, ctx.config, teamId, by);
     requireManage(ctx.config, acting);
     const finalRole = role ?? joinRoleOf(ctx.config);
-    if (!rolesOf(ctx.config).includes(finalRole)) throw new ConvexError(`Unknown role "${finalRole}".`);
+    if (!rolesOf(ctx.config).includes(finalRole)) throw new OneBaseError(`Unknown role "${finalRole}".`);
     if (rankOf(ctx.config, finalRole) < rankOf(ctx.config, acting)) {
-      throw new ConvexError("You can't grant a role above your own.");
+      throw new OneBaseError("You can't grant a role above your own.");
     }
-    if (await findMember(ctx, teamId, userId)) throw new ConvexError("Already a member.");
+    if (await findMember(ctx, teamId, userId)) throw new OneBaseError("Already a member.");
     await ctx.db.insert("members", { teamId, userId, role: finalRole, createdAtMs: Date.now() });
     return null;
   },
@@ -128,18 +128,18 @@ const setRole = mutation({
   args: { teamId: v.string(), userId: v.string(), role: v.string(), by: v.string() },
   handler: async (ctx, { teamId, userId, role, by }) => {
     const member = await findMember(ctx, teamId, userId);
-    if (!member) throw new ConvexError("Not a member.");
+    if (!member) throw new OneBaseError("Not a member.");
     const acting = await actingRole(ctx, ctx.config, teamId, by);
     requireManage(ctx.config, acting);
     requireOver(ctx.config, acting, member.role as string);
-    if (!rolesOf(ctx.config).includes(role)) throw new ConvexError(`Unknown role "${role}".`);
+    if (!rolesOf(ctx.config).includes(role)) throw new OneBaseError(`Unknown role "${role}".`);
     const topRole = rolesOf(ctx.config)[0];
     if (
       member.role === topRole &&
       role !== topRole &&
       (await countOwners(ctx, ctx.config, teamId)) === 1
     ) {
-      throw new ConvexError("Can't demote the only owner; promote someone else first.");
+      throw new OneBaseError("Can't demote the only owner; promote someone else first.");
     }
     await ctx.db.patch(member._id, { role });
     return null;
@@ -150,13 +150,13 @@ const removeMember = mutation({
   args: { teamId: v.string(), userId: v.string(), by: v.string() },
   handler: async (ctx, { teamId, userId, by }) => {
     const member = await findMember(ctx, teamId, userId);
-    if (!member) throw new ConvexError("Not a member.");
+    if (!member) throw new OneBaseError("Not a member.");
     const acting = await actingRole(ctx, ctx.config, teamId, by);
     requireManage(ctx.config, acting);
     requireOver(ctx.config, acting, member.role as string);
     const topRole = rolesOf(ctx.config)[0];
     if (member.role === topRole && (await countOwners(ctx, ctx.config, teamId)) === 1) {
-      throw new ConvexError("Can't remove the only owner.");
+      throw new OneBaseError("Can't remove the only owner.");
     }
     await ctx.db.delete(member._id);
     return null;
@@ -167,10 +167,10 @@ const leave = mutation({
   args: { teamId: v.string(), userId: v.string() },
   handler: async (ctx, { teamId, userId }) => {
     const member = await findMember(ctx, teamId, userId);
-    if (!member) throw new ConvexError("Not a member.");
+    if (!member) throw new OneBaseError("Not a member.");
     const topRole = rolesOf(ctx.config)[0];
     if (member.role === topRole && (await countOwners(ctx, ctx.config, teamId)) === 1) {
-      throw new ConvexError("The only owner can't leave; promote someone else or delete the team.");
+      throw new OneBaseError("The only owner can't leave; promote someone else or delete the team.");
     }
     await ctx.db.delete(member._id);
     return null;
@@ -181,9 +181,9 @@ const deleteTeam = mutation({
   args: { teamId: v.string(), by: v.string() },
   handler: async (ctx, { teamId, by }) => {
     const team = (await ctx.db.get(teamId as any)) as any;
-    if (!team) throw new ConvexError("No such team.");
+    if (!team) throw new OneBaseError("No such team.");
     const acting = await actingRole(ctx, ctx.config, teamId, by);
-    if (rankOf(ctx.config, acting) !== 0) throw new ConvexError(`Only the ${rolesOf(ctx.config)[0]} can delete a team.`);
+    if (rankOf(ctx.config, acting) !== 0) throw new OneBaseError(`Only the ${rolesOf(ctx.config)[0]} can delete a team.`);
     const rows = await ctx.db.query("members").withIndex("by_team_user", (q: any) => q.eq("teamId", teamId)).collect();
     for (const row of rows) await ctx.db.delete(row._id);
     await ctx.db.delete(team._id);
@@ -264,10 +264,10 @@ export type TeamsApi = {
   role: ComponentFn<"query", (args: { teamId: string; userId: string }) => Promise<string | null>>;
 };
 
-/** Throws `ConvexError` when `role` isn't one of the allowed roles (null means "not a member"). */
+/** Throws `OneBaseError` when `role` isn't one of the allowed roles (null means "not a member"). */
 export function assertRole(role: string | null, allowed: string[]) {
   if (role === null || !allowed.includes(role)) {
-    throw new ConvexError(`Requires one of: ${allowed.join(", ")}.`);
+    throw new OneBaseError(`Requires one of: ${allowed.join(", ")}.`);
   }
 }
 
