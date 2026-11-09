@@ -213,7 +213,8 @@ const members = query({
   handler: async (ctx, { teamId }) => {
     const rows = await ctx.db.query("members").withIndex("by_team_user", (q: any) => q.eq("teamId", teamId)).collect();
     return rows
-      .sort((a: any, b: any) => a.createdAtMs - b.createdAtMs)
+      // Rows added in the same millisecond tie on createdAtMs; _creationTime keeps insertion order.
+      .sort((a: any, b: any) => a.createdAtMs - b.createdAtMs || a._creationTime - b._creationTime)
       .map((row: any) => ({ userId: row.userId as string, role: row.role as string, createdAtMs: row.createdAtMs as number }));
   },
 });
