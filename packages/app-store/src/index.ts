@@ -55,7 +55,9 @@ const schema = defineSchema({
     type: v.string(),
     subject: v.optional(v.string()),
     recordedAtMs: v.number(),
-  }).index("by_id", ["id"]),
+  })
+    .index("by_id", ["id"])
+    .index("by_recorded", ["recordedAtMs"]),
 });
 
 const { internalMutation, mutation, query, httpAction } = componentServer<DataModelFromSchema<typeof schema>, AppConfig>();
@@ -201,6 +203,22 @@ const syncTransactions = mutation({
 });
 
 /** The account's subscription state, or null; a live query. */
+/**
+ * Retention: forgets processed-event ids recorded before `beforeMs` (at most `limit` per call).
+ * Replays older than the cutoff are rejected as stale by event time anyway.
+ */
+const pruneEvents = mutation({
+  args: { beforeMs: v.number(), limit: v.optional(v.number()) },
+  handler: async (ctx, { beforeMs, limit }) => {
+    const rows = await ctx.db
+      .query("billing_events")
+      .withIndex("by_recorded", (q: any) => q.lt("recordedAtMs", beforeMs))
+      .take(Math.min(Math.max(limit ?? 500, 1), 1000));
+    for (const row of rows) await ctx.db.delete(row._id);
+    return { deleted: rows.length };
+  },
+});
+
 const getSubscription = query({
   args: { subject: v.string() },
   handler: async (ctx, { subject }) => {
@@ -258,7 +276,7 @@ const webhook = httpAction(async (ctx, request) => {
 export const definition = defineComponent({
   name: "app-store",
   schema,
-  functions: { applyStoreEvent, syncTransactions, getSubscription },
+  functions: { applyStoreEvent, syncTransactions, getSubscription, pruneEvents },
   checkConfig: (config: AppConfig) => {
     if (typeof config?.bundleId !== "string" || config.bundleId.length === 0) {
       throw new Error("appStore({ bundleId }) needs the app's bundle id.");
@@ -286,6 +304,7 @@ export type SubscriptionView = {
 
 export type AppStoreApi = {
   syncTransactions: ComponentFn<"mutation", (args: { userId: string; signedTransactions: string[] }) => Promise<Record<string, unknown>>>;
+  pruneEvents: ComponentFn<"mutation", (args: { beforeMs: number; limit?: number }) => Promise<{ deleted: number }>>;
   getSubscription: ComponentFn<"query", (args: { subject: string }) => Promise<SubscriptionView | null>>;
 };
 
