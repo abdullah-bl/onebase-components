@@ -60,6 +60,16 @@
         "onebase": ">=0.2.0",
       },
     },
+    "packages/static-hosting": {
+      "name": "@onebase/static-hosting",
+      "version": "0.1.0",
+      "bin": {
+        "onebase-static": "./bin/onebase-static.ts",
+      },
+      "peerDependencies": {
+        "onebase": ">=0.2.0",
+      },
+    },
     "packages/teams": {
       "name": "@onebase/teams",
       "version": "0.1.0",
@@ -78,6 +88,8 @@
     "@onebase/notifications": ["@onebase/notifications@workspace:packages/notifications"],
 
     "@onebase/push": ["@onebase/push@workspace:packages/push"],
+
+    "@onebase/static-hosting": ["@onebase/static-hosting@workspace:packages/static-hosting"],
 
     "@onebase/teams": ["@onebase/teams@workspace:packages/teams"],
 
