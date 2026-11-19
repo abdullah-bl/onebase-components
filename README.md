@@ -13,6 +13,7 @@ own tables, typed config, crons, HTTP routes, and no-codegen client exposure.
 | [`@onebase/push`](packages/push) | Push notifications: APNs and FCM, device registry, dead-token cleanup |
 | [`@onebase/email`](packages/email) | Email transports (Resend, Postmark, SMTP) + onebase auth `sendCode` helper |
 | [`@onebase/notifications`](packages/notifications) | In-app notification feed with live queries and an optional email channel |
+| [`@onebase/static-hosting`](packages/static-hosting) | Host a built frontend (SPA or static site) from onebase: atomic deploys, upload-only-what-changed, rollback, cache headers + ETags, and an `onebase-static` deploy CLI |
 
 Each package's README covers setup, usage and its functions. The same pages appear under
 [Component packages](https://abdullah-bl.github.io/onebase/docs/components.html) on the OneBase docs site,

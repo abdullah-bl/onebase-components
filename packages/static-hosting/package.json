@@ -1,0 +1,24 @@
+{
+  "name": "@onebase/static-hosting",
+  "version": "0.1.0",
+  "description": "Host and serve static sites (SPA builds) from onebase: atomic deploys, content-addressed uploads, rollback, cache headers",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./deploy": "./src/deploy.ts"
+  },
+  "bin": {
+    "onebase-static": "./bin/onebase-static.ts"
+  },
+  "files": [
+    "src",
+    "bin"
+  ],
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json",
+    "test": "bun test"
+  },
+  "peerDependencies": {
+    "onebase": ">=0.2.0"
+  }
+}
