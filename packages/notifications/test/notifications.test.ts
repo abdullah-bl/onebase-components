@@ -7,6 +7,9 @@ import { defineSchema } from "onebase/server";
 import { emailFor, notifications } from "../src/index";
 import { call, callMutation, openRuntime, type TestApp } from "../../../test/app";
 
+// Restore the real clock so a frozen time doesn't leak into other test files.
+afterEach(() => setSystemTime());
+
 const appSchema = defineSchema({});
 
 const components = () =>

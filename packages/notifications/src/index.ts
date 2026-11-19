@@ -22,8 +22,8 @@
 // thread that functions in config cannot cross.
 
 import { componentServer, defineComponent, splitMountOptions, type ComponentFn, type Mount, type MountOptions } from "onebase/components";
-import { defineSchema, defineTable, type DataModelFromSchema } from "onebase/server";
-import { OneBaseError, v } from "onebase/values";
+import { OneBaseError, defineSchema, defineTable, type DataModelFromSchema } from "onebase/server";
+import { v } from "onebase/values";
 import { createPostmark, createResend, type Transport } from "@onebase/email";
 
 const SEVERITIES = ["info", "success", "warning", "error"] as const;
