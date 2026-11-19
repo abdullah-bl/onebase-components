@@ -22,8 +22,8 @@
 // thread that functions in config cannot cross.
 
 import { componentServer, defineComponent, splitMountOptions, type ComponentFn, type Mount, type MountOptions } from "onebase/components";
-import { ConvexError, defineSchema, defineTable, type DataModelFromSchema } from "onebase/server";
-import { v } from "onebase/values";
+import { defineSchema, defineTable, type DataModelFromSchema } from "onebase/server";
+import { OneBaseError, v } from "onebase/values";
 import { createPostmark, createResend, type Transport } from "@onebase/email";
 
 const SEVERITIES = ["info", "success", "warning", "error"] as const;
@@ -102,7 +102,7 @@ const publish = mutation({
     emailTo: v.optional(v.string()),
   },
   handler: async (ctx, { subject, kind, title, severity = "info", body, metadata, dedupeKey, emailTo }) => {
-    if (!SEVERITIES.includes(severity as Severity)) throw new ConvexError(`Unknown severity "${severity}".`);
+    if (!SEVERITIES.includes(severity as Severity)) throw new OneBaseError(`Unknown severity "${severity}".`);
     if (dedupeKey) {
       const seen = await ctx.db.query("events").withIndex("by_dedupe", (q: any) => q.eq("dedupeKey", dedupeKey)).unique();
       if (seen) return null;
